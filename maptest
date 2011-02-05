@@ -1,0 +1,43 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname maptest) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f ())))
+
+(require htdp/image)
+
+(define fondo (empty-scene 600 100 ))
+(define ladrillo (nw:rectangle 20 20 'solid 'blue))   ; 2
+(define vacio (nw:rectangle 20 20 'solid 'white))     ; 0
+(define esquina-s-i (nw:rectangle 20 20 'solid 'gray)) ; 1
+(define esquina-s-d (nw:rectangle 20 20 'solid 'yellow)); 3
+
+(define mapa (list 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 'cr 
+                   2 0 0 0 0 0 0 0 0 0 0 2 2 2 0 0 0 0 0 0 0 0 0 2 'cr
+                   2 0 0 0 0 0 0 0 0 0 0 2 2 2 0 0 0 0 0 0 0 0 0 2 'cr
+                   1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 
+                   ) )
+(define dibujos (make-immutable-hash (list (list 1 esquina-s-i)
+                                       (list 2 ladrillo)
+                                       (list 0 vacio)
+                                       (list 3 esquina-s-d)
+                                       (list 'cr 'cr))))
+
+;; para pruebas
+(define linea-1 (map (lambda (x)
+           (hash-ref dibujos x))
+         mapa))
+
+(define (build-line bg li w)
+  (cond ((empty? li) (overlay bg 
+                              (move-pinhole (nw:rectangle 20 20 'solid 'red)
+                                            (- 20)
+                                            0)))
+        ((eq? 'cr (car li)) (overlay
+                             bg
+                             (move-pinhole 
+                             (build-line bg (cdr li) 0)
+                             (* 20 w)
+                             (- 20))))
+        (else (overlay bg
+                       (move-pinhole (build-line (car li) (cdr li) (+ w 1)) 
+                                     (- 20) 
+                                     0)))))
