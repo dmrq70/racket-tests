@@ -2,42 +2,52 @@
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname maptest) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f ())))
 
-(require htdp/image)
+(require 2htdp/image)
 
 (define fondo (empty-scene 600 100 ))
-(define ladrillo (nw:rectangle 20 20 'solid 'blue))   ; 2
-(define vacio (nw:rectangle 20 20 'solid 'white))     ; 0
-(define esquina-s-i (nw:rectangle 20 20 'solid 'gray)) ; 1
-(define esquina-s-d (nw:rectangle 20 20 'solid 'yellow)); 3
+(define vacio (rectangle 32 32 'solid 'black))     ; 0
+(define ladrillo (rectangle 32 32 'solid 'blue))   ; 2
+(define punto (overlay
+               (circle 2 'solid 'yellow)
+               vacio))   ; 4
+(define esquina-s-i (rectangle 32 32 'solid 'gray)) ; 1
+(define esquina-s-d (rectangle 32 32 'solid 'yellow)); 3
 
-(define mapa (list 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 'cr 
-                   2 0 0 0 0 0 0 0 0 0 0 2 2 2 0 0 0 0 0 0 0 0 0 2 'cr
-                   2 0 0 0 0 0 0 0 0 0 0 2 2 2 0 0 0 0 0 0 0 0 0 2 'cr
-                   1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 
-                   ) )
+(define mapa (list 
+              (list 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3)
+              (list 2 4 4 4 4 4 4 4 4 4 4 4 2 4 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 2 2 2 2 2 2 2 2 2 4 2 4 2 4 4 4 4 4 4 4 4 2)
+              (list 2 4 2 2 2 2 2 2 2 2 2 4 2 4 2 4 4 4 4 4 4 4 4 2)
+              (list 2 4 2 2 2 2 2 2 2 2 2 4 2 4 2 4 4 4 4 4 4 4 4 2)
+              (list 2 4 2 2 2 2 2 2 2 2 2 4 2 4 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 4 4 4 4 4 4 4 4 4 4 2 2 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 4 4 4 4 4 4 4 4 4 2 2 2 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 4 4 4 4 4 4 4 4 4 2 2 2 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 4 4 4 4 4 4 4 4 4 4 4 2 4 4 4 4 4 4 4 4 4 2)
+              (list 2 4 4 4 4 4 4 4 4 4 4 2 4 2 4 4 4 4 4 4 4 4 4 2)
+              (list 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3)))
+
 (define dibujos (make-immutable-hash (list (list 1 esquina-s-i)
                                        (list 2 ladrillo)
                                        (list 0 vacio)
                                        (list 3 esquina-s-d)
+                                       (list 4 punto)
                                        (list 'cr 'cr))))
 
-;; para pruebas
-(define linea-1 (map (lambda (x)
-           (hash-ref dibujos x))
-         mapa))
+(define (mapa-en-bloques mapa)
+  (map (lambda (linea)
+         (map (lambda (bloque)
+                (hash-ref dibujos bloque))
+              linea))
+       mapa))
 
-(define (build-line bg li w)
-  (cond ((empty? li) (overlay bg 
-                              (move-pinhole (nw:rectangle 20 20 'solid 'red)
-                                            (- 20)
-                                            0)))
-        ((eq? 'cr (car li)) (overlay
-                             bg
-                             (move-pinhole 
-                             (build-line bg (cdr li) 0)
-                             (* 20 w)
-                             (- 20))))
-        (else (overlay bg
-                       (move-pinhole (build-line (car li) (cdr li) (+ w 1)) 
-                                     (- 20) 
-                                     0)))))
+(define (build-map-image lineas)
+  (foldr 
+   above
+   (rectangle 0 0 'solid 'blue)
+   (map
+    (lambda (x)
+      (foldr beside (rectangle 0 0 'solid 'blue) x))
+    lineas)))
